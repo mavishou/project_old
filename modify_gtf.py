@@ -32,7 +32,7 @@ class Transcript:
 			self.utr5Cods, self.utr3Cods = self.getUTR()
 			self.outputList.extend(self.__getCDSOut())
 			self.outputList.extend(self.getUTROut())
-# 		self.getFinalOut(self)
+		self.getFinalOut()
 
 	def getCoordiates(self, originList):
 		coordinates = []
@@ -133,14 +133,12 @@ class Transcript:
 			out = self.generalInfo[:2] + ["intron"] + [str(s) for s in myIntronCods[i]] + self.generalInfo[2:] + [annotation]
 			intronOut.append(out)
 		return(intronOut)
-
-	
 		
-# 	def getFinalOut(self):
-# 		'''input: outputList, strand'''
-# 		tmp = self.getCoordiates(self, self.outputList)
-# 		if self.strand == '-':
-# 			self.outputList = self.outputList[::-1]
+	def getFinalOut(self):
+		'''input: outputList, strand'''
+		self.outputList, tmp = self.getCoordiates(self.outputList)
+		if self.strand == '-':
+			self.outputList = self.outputList[::-1]
 
 curtTransId = ''
 curGeneId = ''
@@ -248,7 +246,7 @@ print trans.geneId
 
 # the last output
 # trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
-# finalOutput(trans.outputList)
+finalOutput(trans.outputList)
 
 
 
