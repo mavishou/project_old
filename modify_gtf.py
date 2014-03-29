@@ -21,10 +21,10 @@ class Transcript:
 
 		self.outputList.extend(self.__getExonOut())
 		# self.exons[0].append('test')
-# 		# exon大于1才会有intron
-# 		if len(self.exons) > 1:
-# 			self.intronCods = self.getIntronCords(self)
-# 			self.outputList.extend(self.getIntronOut(self))
+		# exon大于1才会有intron
+		if len(self.exons) > 1:
+			self.intronCods = self.getIntronCords()
+			self.outputList.extend(self.getIntronOut())
 
 # 		# 如果有cds
 # 		if len(self.cdss) > 0:
@@ -47,12 +47,12 @@ class Transcript:
 		originList = copy.deepcopy([originList[i] for i in idx])
 		return originList, coordinates
 
-# 	def getIntronCords(self):
-# 		'''input: exonCods'''
-# 		intronCods = self.exonCods.reshape(1,-1)[:, 1:-1].reshape(-1,2)
-# 		intronCods[:, 0] = intronCods[:, 0] + 1
-# 		intronCods[:, 1] = intronCods[:, 1] - 1
-# 		return intronCods
+	def getIntronCords(self):
+		'''input: exonCods'''
+		intronCods = np.copy(self.exonCods).reshape(1,-1)[:, 1:-1].reshape(-1,2)
+		intronCods[:, 0] = intronCods[:, 0] + 1
+		intronCods[:, 1] = intronCods[:, 1] - 1
+		return intronCods
 
 	
 # 	def cmpExonCDS(self, exon, cds, mark):
@@ -132,19 +132,19 @@ class Transcript:
 # 			cdssOut[i].append(annotation)
 # 		return(getExonOut)
 
-# 	def getIntronOut(self):
-# 		'''input: intronCods, info, stand'''
-# 		if self.strand == '-':
-# 			myIntronCods = self.intronCods[::-1]
-# 		else:
-# 			myIntronCods = self.intronCods[:]
-# 		intronOut = []
-# 		for i in range(len(myIntronCods)):
-# 			intronNum = i + 1
-# 			annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID + '; intron_number ' + intronNum
-# 			out = self.generalInfo[:2] + "intron" + [str(s) for s in myIntronCods[i]] + self.generalInfo[2:] + annotation
-# 			intronOut.append(out)
-# 		return(intronOut)
+	def getIntronOut(self):
+		'''input: intronCods, info, stand'''
+		if self.strand == '-':
+			myIntronCods = np.copy(self.intronCods)[::-1]
+		else:
+			myIntronCods = np.copy(self.intronCods)
+		intronOut = []
+		for i in range(len(myIntronCods)):
+			intronNum = i + 1
+			annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID + '; intron_number ' + str(intronNum)
+			out = self.generalInfo[:2] + ["intron"] + [str(s) for s in myIntronCods[i]] + self.generalInfo[2:] + [annotation]
+			intronOut.append(out)
+		return(intronOut)
 
 	
 		
@@ -238,6 +238,8 @@ print
 print trans.exons
 print
 print trans.exonCods
+print
+print trans.intronCods
 print
 print trans.outputList
 print
