@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import pdb
 import cPickle
+import copy
 
 class Transcript:
 	#pdb.set_trace()
@@ -16,9 +17,10 @@ class Transcript:
 		self.strand = curStrand
 		self.generalInfo = self.exons[0][0:2] + self.exons[0][5:8]
 		self.exons, self.exonCods = self.getCoordiates(self.exons)
-		# self.outputList = []
+		self.outputList = []
 
-		# self.outputList.extend(self.getExonOut(self))
+		self.outputList.extend(self.__getExonOut())
+		# self.exons[0].append('test')
 # 		# exon大于1才会有intron
 # 		if len(self.exons) > 1:
 # 			self.intronCods = self.getIntronCords(self)
@@ -41,7 +43,8 @@ class Transcript:
 		coordinates = coordinates[idx]
 		# orinigal list同时进行排序，否则和坐标不同步了
 		# 注意改变这里并不会改变
-		originList = [originList[i] for i in idx]
+		# originList = [originList[i] for i in idx]
+		originList = copy.deepcopy([originList[i] for i in idx])
 		return originList, coordinates
 
 # 	def getIntronCords(self):
@@ -103,18 +106,19 @@ class Transcript:
 # 			utrOut.append(self.generalInfo[:2] + "3_utr" + [str(s) for s in utr] + self.generalInfo[2:] + annotation)
 # 		return(utrOut)	
 
-# 	def getExonOut(self):
-# 		'''input: exons, stand'''
-# 		# 如果是负链，exon颠倒
-# 		if self.strand == '-':
-# 			exonsOut = self.exons[::-1]
-# 		else:
-# 			exonsOut = self.exons[:]
-# 		for i in range(len(exonsOut)):
-# 			exonNum = i + 1
-# 			annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID + '; exon_number ' + exonNum
-# 			exonsOut[i].append(annotation)
-# 		return(getExonOut)
+	def __getExonOut(self):
+		'''input: exons, stand'''
+		# 如果是负链，exon颠倒
+		if self.strand == '-':
+			# exonsOut = self.exons[::-1]
+			exonsOut = copy.deepcopy(self.exons)[::-1]
+		else:
+			exonsOut = copy.deepcopy(self.exons)
+		for i in range(len(exonsOut)):
+			exonNum = i + 1
+			annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID + '; exon_number ' + str(exonNum)
+			exonsOut[i].append(annotation)
+		return(exonsOut)
 
 # 	def getCDSOut(self):
 # 		'''input: cdss, stand'''
@@ -227,10 +231,16 @@ for line in sys.stdin.readlines():
 # w = open('exons.tmp', 'w')
 trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
 # cPickle.dump(trans.exons, w)
-
+# print len(li)
+# print li[:8]
 print exons
+print
 print trans.exons
+print
 print trans.exonCods
+print
+print trans.outputList
+print
 # print trans.cdss
 print trans.transID
 print trans.geneId
