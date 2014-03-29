@@ -71,6 +71,7 @@ class Transcript:
 		if cdsFirst < exonFirst or cdsLast > exonLast:
 			sys.stderr.write('The CDS is beyond the exon! ' + self.transID + '\n')
 			sys.exit(1)
+		# +1和-1不能在检查cds和exon之前，否则，当cds和exon相同时，会报错，而实际上应该是正确的
 		cdsFirst -= 1
 		cdsLast += 1
 		for ec in self.exonCods:
@@ -163,12 +164,12 @@ def processAnnotation(annotation):
 	'''
 	ants = annotation.split(';')
 	# 如果以分号结尾，则最后一个元素为空，把空的去掉，并把每个元素开头的空格去掉
-	ants = [a.strip() for a in ants if a != '']
+	ants = [a.strip() for a in ants if a != '' and a != ' ']
 	antsDict = {}
 	for a in ants:
 		antSplit=a.split(' ')
-		##check length
-		antsDict[antSplit[0]] = antSplit[1]
+		##check leng	th
+		antsDict[antSplit[0]] = antSplit[1].strip('"')
 	return antsDict
 
 def finalOutput(myList):
@@ -181,6 +182,7 @@ for line in sys.stdin.readlines():
 	# pdb.set_trace()
 	li = line.rstrip('\n').split('\t')
 	# annotation
+	# print li
 	antsDict = processAnnotation(li[8])
 	
 	# check whether have gene id and trans id
