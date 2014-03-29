@@ -62,8 +62,8 @@ class Transcript:
 		utr5 = []
 		cdscoords = np.copy(self.cdsCods).reshape(1,-1)[0,]
 		cdscoords.sort()
-		cdsFirst = cdscoords[0] - 1
-		cdsLast = cdscoords[-1] + 1
+		cdsFirst = cdscoords[0]
+		cdsLast = cdscoords[-1]
 		exoncoords = np.copy(self.exonCods).reshape(1,-1)[0,]
 		exoncoords.sort()
 		exonFirst = exoncoords[0]
@@ -71,6 +71,8 @@ class Transcript:
 		if cdsFirst < exonFirst or cdsLast > exonLast:
 			sys.stderr.write('The CDS is beyond the exon! ' + self.transID + '\n')
 			sys.exit(1)
+		cdsFirst -= 1
+		cdsLast += 1
 		for ec in self.exonCods:
 			bf1 = getOverlap(ec, [exonFirst, cdsFirst])
 			if bf1 != []:
