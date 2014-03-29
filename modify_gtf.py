@@ -30,8 +30,8 @@ class Transcript:
 		if len(self.cdss) > 0:
 			self.cdss, self.cdsCods = self.getCoordiates(self.cdss)
 			self.utr5Cods, self.utr3Cods = self.getUTR()
-			# self.outputList.extend(getCDSOut(self))
-			# self.outputList.extend(getUTROut(self))
+			self.outputList.extend(self.__getCDSOut())
+			self.outputList.extend(self.getUTROut())
 # 		self.getFinalOut(self)
 
 	def getCoordiates(self, originList):
@@ -53,18 +53,6 @@ class Transcript:
 		intronCods[:, 0] = intronCods[:, 0] + 1
 		intronCods[:, 1] = intronCods[:, 1] - 1
 		return intronCods
-
-	
-# 	def cmpExonCDS(self, exon, cds, mark):
-# 		'''input: 
-# 				a pair of exon coordinates
-# 				a pair of cds coordinates
-# 				mark: 0 -> begin; 1 -> end
-# 		'''
-# 		if (mark == 0 and exon[0] < cds[0] and exon[1] == cds[1]) or (mark == 1 and exon[1] > cds[1] and exon[0] == cds[0]):
-# 			return True
-# 		else:
-# 			return False
 
 	def getUTR(self):
 		'''input:exonCods, cdsCods
@@ -96,15 +84,15 @@ class Transcript:
 		return utr5, utr3
 
 
-# 	def getUTROut(self):
-# 		'''input: utrCods, strand'''
-# 		annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID
-# 		utrOut=[]
-# 		for utr in self.utr5Cods:
-# 			utrOut.append(self.generalInfo[:2] + "5_utr" + [str(s) for s in utr] + self.generalInfo[2:] + annotation)
-# 		for utr in self.utr3Cods:
-# 			utrOut.append(self.generalInfo[:2] + "3_utr" + [str(s) for s in utr] + self.generalInfo[2:] + annotation)
-# 		return(utrOut)	
+	def getUTROut(self):
+		'''input: utrCods, strand'''
+		annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID
+		utrOut=[]
+		for utr in self.utr5Cods:
+			utrOut.append(self.generalInfo[:2] + ["5_UTR"] + [str(s) for s in utr] + self.generalInfo[2:] + [annotation])
+		for utr in self.utr3Cods:
+			utrOut.append(self.generalInfo[:2] + ["3_UTR"] + [str(s) for s in utr] + self.generalInfo[2:] + [annotation])
+		return(utrOut)
 
 	def __getExonOut(self):
 		'''input: exons, stand'''
@@ -120,17 +108,17 @@ class Transcript:
 			exonsOut[i].append(annotation)
 		return(exonsOut)
 
-# 	def getCDSOut(self):
-# 		'''input: cdss, stand'''
-# 		if self.strand == '-':
-# 			cdssOut = self.cdss[::-1]
-# 		else:
-# 			cdssOut = self.cdss[:]
-# 		for i in range(len(cdssOut)):
-# 			cdsNum = i + 1
-# 			annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID + '; CDS_number ' + cdsNum
-# 			cdssOut[i].append(annotation)
-# 		return(getExonOut)
+	def __getCDSOut(self):
+		'''input: cdss, stand'''
+		if self.strand == '-':
+			cdssOut = copy.deepcopy(self.cdss)[::-1]
+		else:
+			cdssOut = copy.deepcopy(self.cdss)
+		for i in range(len(cdssOut)):
+			cdsNum = i + 1
+			annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID + '; CDS_number ' + str(cdsNum)
+			cdssOut[i].append(annotation)
+		return(cdssOut)
 
 	def getIntronOut(self):
 		'''input: intronCods, info, stand'''
