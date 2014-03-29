@@ -27,11 +27,11 @@ class Transcript:
 			self.outputList.extend(self.getIntronOut())
 
 # 		# 如果有cds
-# 		if len(self.cdss) > 0:
-# 			self.cdsCods = self.getCoordiates(self, self.cdss)
-# 			self.utr5Cods, self.utr3Cods = self.getUTR(self)
-# 			self.outputList.extend(getCDSOut(self))
-# 			self.outputList.extend(getUTROut(self))
+		if len(self.cdss) > 0:
+			self.cdss, self.cdsCods = self.getCoordiates(self.cdss)
+			self.utr5Cods, self.utr3Cods = self.getUTR()
+			# self.outputList.extend(getCDSOut(self))
+			# self.outputList.extend(getUTROut(self))
 # 		self.getFinalOut(self)
 
 	def getCoordiates(self, originList):
@@ -66,34 +66,34 @@ class Transcript:
 # 		else:
 # 			return False
 
-# 	def getUTR(self):
-# 		'''input:exonCods, cdsCods
-# 		'''
-# 		utr3 = []
-# 		utr5 = []
-# 		cdscoords = cdsCods.copy().reshape(1,-1)[0,]
-# 		cdscoords.sort()
-# 		cdsFirst = cdscoords[0] - 1
-# 		cdsLast = cdscoords[-1] + 1
-# 		exoncoords = exonCods.copy().reshape(1,-1)[0,]
-# 		exoncoords.sort()
-# 		exonFirst = exoncoords[0]
-# 		exonLast = exoncoords[-1]
-# 		if cdsFirst < exonFirst or cdsLast > exonLast:
-# 			sys.stderr.write('The CDS is beyond the exon! ' + self.transID + '\n')
-# 			sys.exit(1)
-# 		for ec in exonCods:
-# 			bf1 = getOverlap(ec, [exonFirst, cdsFirst]):
-# 			if bf1 != False:
-# 				utr5.append(bf1)
-# 			bf2 = getOverlap(ec, [cdsLast, exonLast])
-# 			if bf2 != False:
-# 				utr3.append(bf2)
-# 		utr3 = np.array(utr3)
-# 		utr5 = np.array(utr5)
-# 		if self.strand == '-':
-# 			utr5, utr3 = utr3, utr5
-# 		return utr5, utr3
+	def getUTR(self):
+		'''input:exonCods, cdsCods
+		'''
+		utr3 = []
+		utr5 = []
+		cdscoords = np.copy(self.cdsCods).reshape(1,-1)[0,]
+		cdscoords.sort()
+		cdsFirst = cdscoords[0] - 1
+		cdsLast = cdscoords[-1] + 1
+		exoncoords = np.copy(self.exonCods).reshape(1,-1)[0,]
+		exoncoords.sort()
+		exonFirst = exoncoords[0]
+		exonLast = exoncoords[-1]
+		if cdsFirst < exonFirst or cdsLast > exonLast:
+			sys.stderr.write('The CDS is beyond the exon! ' + self.transID + '\n')
+			sys.exit(1)
+		for ec in self.exonCods:
+			bf1 = getOverlap(ec, [exonFirst, cdsFirst])
+			if bf1 != []:
+				utr5.append(bf1)
+			bf2 = getOverlap(ec, [cdsLast, exonLast])
+			if bf2 != []:
+				utr3.append(bf2)
+		utr3 = np.array(utr3)
+		utr5 = np.array(utr5)
+		if self.strand == '-':
+			utr5, utr3 = utr3, utr5
+		return utr5, utr3
 
 
 # 	def getUTROut(self):
@@ -161,11 +161,12 @@ exons = []
 cdss = []
 
 def getOverlap(x, y):
-	if x[1] > y[0] or y[1] > x[0]:
-		return False
+	if x[1] < y[0] or y[1] < x[0]:
+		return []
 	else:
 		coordinates = np.append(x, y)
-		return coordinates.sort()[1:3]
+		coordinates.sort()
+		return coordinates[1:3]
 
 def processAnnotation(annotation):
 	'''input: the 9th colume of a gtf file
@@ -233,17 +234,24 @@ trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
 # cPickle.dump(trans.exons, w)
 # print len(li)
 # print li[:8]
-print exons
+# print exons
 print
-print trans.exons
+# print trans.exons
 print
 print trans.exonCods
 print
 print trans.intronCods
 print
+print trans.cdss
+print
+print trans.cdsCods
+print
+print trans.utr5Cods
+print
+print trans.utr3Cods
+print
 print trans.outputList
 print
-# print trans.cdss
 print trans.transID
 print trans.geneId
 # print trans.generalInfo
