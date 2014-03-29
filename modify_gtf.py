@@ -4,6 +4,7 @@
 import sys
 import numpy as np
 import pdb
+import cPickle
 
 class Transcript:
 	#pdb.set_trace()
@@ -14,10 +15,10 @@ class Transcript:
 		self.cdss = cdss
 		self.strand = curStrand
 		self.generalInfo = self.exons[0][0:2] + self.exons[0][5:8]
-# 		self.exonCods = self.getCoordiates(self, self.exons)
-# 		self.outputList = []
+		self.exons, self.exonCods = self.getCoordiates(self.exons)
+		# self.outputList = []
 
-# 		self.outputList.extend(self.getExonOut(self))
+		# self.outputList.extend(self.getExonOut(self))
 # 		# exon大于1才会有intron
 # 		if len(self.exons) > 1:
 # 			self.intronCods = self.getIntronCords(self)
@@ -31,16 +32,17 @@ class Transcript:
 # 			self.outputList.extend(getUTROut(self))
 # 		self.getFinalOut(self)
 
-# 	def getCoordiates(self, originList):
-# 		coordinates = []
-# 		for l in originList:
-# 			coordinates.append([int(s) for s in l[3:5]])
-# 		coordinates = np.array(coordinates)
-# 		idx = lexsort((coordinates[:,1],coordinates[:,0]))
-# 		coordinates = coordinates[idx]
-# 		# orinigal list同时进行排序，否则和坐标不同步了
-# 		originList = originList[idx]
-# 		return coordinates
+	def getCoordiates(self, originList):
+		coordinates = []
+		for l in originList:
+			coordinates.append([int(s) for s in l[3:5]])
+		coordinates = np.array(coordinates)
+		idx = np.lexsort((coordinates[:,1],coordinates[:,0]))
+		coordinates = coordinates[idx]
+		# orinigal list同时进行排序，否则和坐标不同步了
+		# 注意改变这里并不会改变
+		originList = [originList[i] for i in idx]
+		return originList, coordinates
 
 # 	def getIntronCords(self):
 # 		'''input: exonCods'''
@@ -222,12 +224,17 @@ for line in sys.stdin.readlines():
 ##test end
 
 ##test beign
+# w = open('exons.tmp', 'w')
 trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
+# cPickle.dump(trans.exons, w)
+
+print exons
 print trans.exons
-print trans.cdss
+print trans.exonCods
+# print trans.cdss
 print trans.transID
 print trans.geneId
-print trans.generalInfo
+# print trans.generalInfo
 ##test end
 
 
