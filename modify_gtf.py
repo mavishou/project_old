@@ -3,8 +3,8 @@
 
 import sys
 import numpy as np
-import pdb
-import cPickle
+# import pdb
+# import cPickle
 import copy
 
 class Transcript:
@@ -32,6 +32,7 @@ class Transcript:
 			self.utr5Cods, self.utr3Cods = self.getUTR()
 			self.outputList.extend(self.__getCDSOut())
 			self.outputList.extend(self.getUTROut())
+		
 		self.getFinalOut()
 
 	def getCoordiates(self, originList):
@@ -206,6 +207,10 @@ for line in sys.stdin.readlines():
 	if li[2] == 'CDS':
 		cdss.append(li[:8])
 
+# the last output
+trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
+finalOutput(trans.outputList)
+
 ##test beign
 # print str(exons)
 # print str(cdss)
@@ -216,37 +221,32 @@ for line in sys.stdin.readlines():
 
 ##test beign
 # w = open('exons.tmp', 'w')
-trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
-# cPickle.dump(trans.exons, w)
-# print len(li)
-# print li[:8]
-# print exons
-print
-# print trans.exons
-print
-print trans.exonCods
-print
-print trans.intronCods
-print
-print trans.cdss
-print
-print trans.cdsCods
-print
-print trans.utr5Cods
-print
-print trans.utr3Cods
-print
-print trans.outputList
-print
-print trans.transID
-print trans.geneId
+# trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
+# # cPickle.dump(trans.exons, w)
+# # print len(li)
+# # print li[:8]
+# # print exons
+# print
+# # print trans.exons
+# print
+# print trans.exonCods
+# print
+# print trans.intronCods
+# print
+# print trans.cdss
+# print
+# print trans.cdsCods
+# print
+# print trans.utr5Cods
+# print
+# print trans.utr3Cods
+# print
+# print trans.outputList
+# print
+# print trans.transID
+# print trans.geneId
 # print trans.generalInfo
 ##test end
-
-
-# the last output
-# trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
-finalOutput(trans.outputList)
 
 
 
