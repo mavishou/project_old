@@ -213,6 +213,14 @@ for line in sys.stdin.readlines():
 	if li[2] == 'CDS':
 		cdss.append(li[:8])
 
+##test beign
+print str(exons)
+print str(cdss)
+print curStrand
+print curtTransId
+print curGeneId
+##test end
+
 # the last output
 # finalOutput(trans.outputList)
 
