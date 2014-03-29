@@ -5,15 +5,15 @@ import sys
 import numpy as np
 import pdb
 
-# class Transcript:
-# 	#pdb.set_trace()
-# 	def __init__(self, geneId, transID, curStrand, exons, cdss):
-# 		self.geneId = geneId
-# 		self.transID = transID
-# 		self.exons = exons
-# 		self.cdss = cdss
-# 		self.strand = curStrand
-# 		self.generalInfo = self.exons[0][0:2] + self.exons[0][5:8]
+class Transcript:
+	#pdb.set_trace()
+	def __init__(self, geneId, transID, curStrand, exons, cdss):
+		self.geneId = geneId
+		self.transID = transID
+		self.exons = exons
+		self.cdss = cdss
+		self.strand = curStrand
+		self.generalInfo = self.exons[0][0:2] + self.exons[0][5:8]
 # 		self.exonCods = self.getCoordiates(self, self.exons)
 # 		self.outputList = []
 
@@ -214,14 +214,25 @@ for line in sys.stdin.readlines():
 		cdss.append(li[:8])
 
 ##test beign
-print str(exons)
-print str(cdss)
-print curStrand
-print curtTransId
-print curGeneId
+# print str(exons)
+# print str(cdss)
+# print curStrand
+# print curtTransId
+# print curGeneId
 ##test end
 
+##test beign
+trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
+print trans.exons
+print trans.cdss
+print trans.transID
+print trans.geneId
+print trans.generalInfo
+##test end
+
+
 # the last output
+# trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
 # finalOutput(trans.outputList)
 
 
