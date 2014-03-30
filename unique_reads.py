@@ -25,6 +25,19 @@ def fCorrectMismatchNum(mutations):
 		muNum = muNum - max(tToc, aTog)
 		return muNum
 
+def outputUnique():
+	# 前一个read最少的MM数目
+	global currentMismathNum
+	global uniqueReads
+	global currentAlign
+	minMismatch = min(currentMismathNum)
+	# 如果这个最小的数目是唯一的，那么它是unique read，输出
+	countMinMM = currentMismathNum.count(minMismatch)
+	if countMinMM == 1:
+		idx = currentMismathNum.index(minMismatch)
+		print currentAlign[idx]
+		uniqueReads += 1
+
 # 如果是main，则是运行此程序，否则是import它，就不需要执行下面的了
 if __name__ == '__main__':
 	# currentRead是当前正在处理的reads名字
@@ -58,23 +71,21 @@ if __name__ == '__main__':
 			uniqueReads += 1
 		else:
 			if  li[0] != currentRead and currentRead != '': # a
-				# 前一个read最少的MM数目
-				minMismatch = min(currentMismathNum)
-				# 如果数目为1，那么它是unique read，输出
-				countMinMM = currentMismathNum.count(minMismatch)
-				if countMinMM == 1:
-					idx = currentMismathNum.index(minMismatch)
-					print currentAlign[idx]
-					uniqueReads += 1
+				outputUnique()
 			
 			if li[0] != currentRead: # b
 				totalReads += 1
 				currentRead = li[0]
-				currentAlign = [line]
-				currentMismathNum = [fCorrectMismatchNum(li[7])]
-			else: # c
-				currentAlign.append(line)
-				currentMismathNum.append(fCorrectMismatchNum(li[7]))
+				currentAlign = []
+				currentMismathNum = []
+				# currentAlign = [line]
+				# currentMismathNum = [fCorrectMismatchNum(li[7])]
+
+			currentAlign.append(line)
+			currentMismathNum.append(fCorrectMismatchNum(li[7]))
+
+	# 结束之后最后一个还需要输出
+	outputUnique()
 
 	# 统计信息输出到标准错误流
 	sys.stderr.write('Total reads: ' + str(totalReads) + '\nUnique reads: ' + str(uniqueReads) + '\n')

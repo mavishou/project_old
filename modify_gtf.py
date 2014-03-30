@@ -1,5 +1,20 @@
 # -*- coding: utf-8 -*
 #!/usr/bin/python
+'''
+Author: Mei Hou
+
+This script is just for modifying TangX's V4expCaculate.combined.gtf.
+It hasn't been tested for other gtf files. 
+If you want to use it to deal with other files, make sure the file is sorted by transcript_id
+
+Main Features:  
+1. Get introns for every transcripts that have more than 1 exons.
+2. Get the 5'UTR and 3'UTR for transcripts that have CDS annotation
+
+Note: 
+1. The 9th colunm of the original file is simplified. Only gene_id, transcript_id and exon/intron/CDS_number are retained
+2. For some transcripts that have overlaped exons, overlaped exons are conbined when getting introns, but the output of exons are as the original ones.
+'''
 
 import sys
 import numpy as np
@@ -8,6 +23,21 @@ import numpy as np
 import copy
 
 class Transcript:
+	'''
+	geneId
+	transID
+	exons -> a list of splited gtf exon line lists of transcripts, except for the 9th colunm. Will be sorted by the coordinates
+	cdss -> a list of splited gtf CDS line lists of transcripts, except for the 9th colunm
+	strand
+	generalInfo -> a list of general annotation info of a transcript, contain gtf colunm: 1, 2, 6, 7, 8
+	exonCods -> a 2-d numpy array of exon coordinates of a transcripts. sorted
+	conbinedExonCods -> a 2-d numpy array of conbined exon coordinates of a transcripts. sorted
+	intronCods -> a 2-d numpy array of intron coordinates of a transcripts. sorted
+	cdsCods -> a 2-d numpy array of CDS coordinates of a transcripts. sorted
+	utr5Cods -> a 2-d numpy array of 5' UTR coordinates of a transcripts. sorted
+	utr3Cods -> a 2-d numpy array of 3' UTR coordinates of a transcripts. sorted
+	outputList -> a list of output lists of this transcript
+	'''
 	#pdb.set_trace()
 	def __init__(self, geneId, transID, curStrand, exons, cdss):
 		self.geneId = geneId
@@ -17,17 +47,18 @@ class Transcript:
 		self.strand = curStrand
 		self.generalInfo = self.exons[0][0:2] + self.exons[0][5:8]
 		self.exons, self.exonCods = self.getCoordiates(self.exons)
+		# conbine the overlapped exons
 		self.conbinedExonCods = self.getConbineExons()
 		self.outputList = []
 
 		self.outputList.extend(self.__getExonOut())
 		# self.exons[0].append('test')
-		# exon大于1才会有intron
+		# conbined exon数目大于1才会有intron
 		if len(self.conbinedExonCods) > 1:
 			self.intronCods = self.getIntronCords()
 			self.outputList.extend(self.getIntronOut())
 
-# 		# 如果有cds
+# 		# 如果有cds，得到UTR
 		if len(self.cdss) > 0:
 			self.cdss, self.cdsCods = self.getCoordiates(self.cdss)
 			self.utr5Cods, self.utr3Cods = self.getUTR()
@@ -37,10 +68,19 @@ class Transcript:
 		self.getFinalOut()
 
 	def getCoordiates(self, originList):
+		'''
+		Input: a list of several lines (have been splited to lists) of gtf files. (Only the first 6 colums are requered)
+		Return: a 2-d numpy array of sorted coordinates
+				the sorted original list
+		The sort rule: first by [:, 0] and then by [ :, 1]
+		'''
 		coordinates = []
+		# get the coordinates
 		for l in originList:
 			coordinates.append([int(s) for s in l[3:5]])
+		# turn to np array
 		coordinates = np.array(coordinates)
+		# get the sort index
 		idx = np.lexsort((coordinates[:,1],coordinates[:,0]))
 		coordinates = coordinates[idx]
 		# orinigal list同时进行排序，否则和坐标不同步了
@@ -50,14 +90,25 @@ class Transcript:
 		return originList, coordinates
 
 	def conbine2Exons(self, x, y):
-			coordinates = np.append(x, y)
-			coordinates.sort()
-			return [coordinates[0], coordinates[-1]]
+		'''
+		Input: two overlapped coordinate pairs
+		Output: the conbined coordinate pair (in a list)
+		Note: the two input pairs must be overlapped.
+		'''
+		coordinates = np.append(x, y)
+		coordinates.sort()
+		return [coordinates[0], coordinates[-1]]
 
 
 	def getConbineExons(self):
+		'''
+		Main pseudo input: self.exonCods
+		Output: self.conbinedExonCods
+
+		'''
 		# pdb.set_trace()
 		conbinedExonCods = []
+		# 用来装那些已经在全局conbine过的，在后面应该把他们去掉
 		toBeremoved = []
 		for i in range(len(self.exonCods)):
 			if not i in toBeremoved:
@@ -73,16 +124,22 @@ class Transcript:
 		return conbinedExonCods
 
 	def getIntronCords(self):
-		'''input: exonCods'''
-		
+		'''
+		Main pseudo input: self.conbinedExonCods
+		Output: self.intronCods
+
+		'''		
 		intronCods = np.copy(self.conbinedExonCods).reshape(1,-1)[:, 1:-1].reshape(-1,2)
 		intronCods[:, 0] = intronCods[:, 0] + 1
 		intronCods[:, 1] = intronCods[:, 1] - 1
 		return intronCods
 
 	def getUTR(self):
-		'''input:exonCods, cdsCods
 		'''
+		Main pseudo input: self.exonCods, self.cdsCods
+		Output: self.utr5Cods, self.utr3Cods
+
+		'''	
 		utr3 = []
 		utr5 = []
 		cdscoords = np.copy(self.cdsCods).reshape(1,-1)[0,]
@@ -114,8 +171,11 @@ class Transcript:
 
 
 	def getUTROut(self):
-		'''input: utrCods, strand'''
-		annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID
+		'''
+		Main pseudo input: self.utr5Cods, self.utr3Cods, starnd
+		Output: the output form of UTR
+
+		'''			annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID
 		utrOut=[]
 		for utr in self.utr5Cods:
 			utrOut.append(self.generalInfo[:2] + ["5_UTR"] + [str(s) for s in utr] + self.generalInfo[2:] + [annotation])
@@ -124,7 +184,6 @@ class Transcript:
 		return(utrOut)
 
 	def __getExonOut(self):
-		'''input: exons, stand'''
 		# 如果是负链，exon颠倒
 		if self.strand == '-':
 			# exonsOut = self.exons[::-1]
@@ -138,7 +197,6 @@ class Transcript:
 		return(exonsOut)
 
 	def __getCDSOut(self):
-		'''input: cdss, stand'''
 		if self.strand == '-':
 			cdssOut = copy.deepcopy(self.cdss)[::-1]
 		else:
@@ -150,7 +208,6 @@ class Transcript:
 		return(cdssOut)
 
 	def getIntronOut(self):
-		'''input: intronCods, info, stand'''
 		if self.strand == '-':
 			myIntronCods = np.copy(self.intronCods)[::-1]
 		else:
@@ -164,18 +221,19 @@ class Transcript:
 		return(intronOut)
 		
 	def getFinalOut(self):
-		'''input: outputList, strand'''
+		'''
+		Main pseudo input: self.outputList
+		Ouput: the sorted outputList
+		'''
 		self.outputList, tmp = self.getCoordiates(self.outputList)
 		if self.strand == '-':
 			self.outputList = self.outputList[::-1]
 
-curtTransId = ''
-curGeneId = ''
-curStrand = ''
-exons = []
-cdss = []
-
 def getOverlap(x, y):
+	'''
+	Input : 2 coordinates pairs
+	Return: if they are overlapped, return their overlapped region in a list, otherwise return []
+	'''
 	if x[1] < y[0] or y[1] < x[0]:
 		return []
 	else:
@@ -185,7 +243,7 @@ def getOverlap(x, y):
 
 def processAnnotation(annotation):
 	'''input: the 9th colume of a gtf file
-	output: a dict of annotations 
+		output: a dict of annotations 
 	'''
 	ants = annotation.split(';')
 	# 如果以分号结尾，则最后一个元素为空，把空的去掉，并把每个元素开头的空格去掉
@@ -198,49 +256,60 @@ def processAnnotation(annotation):
 	return antsDict
 
 def finalOutput(myList):
+	'''
+		Input: a list output lists
+		Action: join lists with '\t' and print them to the standard output
+	'''
 	for l in myList:
 		outputLine = '\t'.join(l)
 		print outputLine
 
 ####################################################
-# f = open('/lustre/user/houm/projects/AnnoLnc/error.gtf')
-# for line in f.readlines():
-for line in sys.stdin.readlines():
-	# pdb.set_trace()
-	li = line.rstrip('\n').split('\t')
-	# annotation
-	# print li
-	antsDict = processAnnotation(li[8])
+if __name__ == '__main__':
+	curtTransId = ''
+	curGeneId = ''
+	curStrand = ''
+	exons = []
+	cdss = []
 	
-	# check whether have gene id and trans id
-	if not 'gene_id' in antsDict:
-		sys.stderr.write('No gene_id!\n')
-		print line
-		sys.exit(1)
-	if not 'transcript_id' in antsDict:
-		sys.stderr.write('No transcript_id!\n')
-		print line
-		sys.exit(1)
+	# f = open('/lustre/user/houm/projects/AnnoLnc/error.gtf')
+	# for line in f.readlines():
+	for line in sys.stdin.readlines():
+		# pdb.set_trace()
+		li = line.rstrip('\n').split('\t')
+		# annotation
+		# print li
+		antsDict = processAnnotation(li[8])
+		
+		# check whether have gene id and trans id
+		if not 'gene_id' in antsDict:
+			sys.stderr.write('No gene_id!\n')
+			print line
+			sys.exit(1)
+		if not 'transcript_id' in antsDict:
+			sys.stderr.write('No transcript_id!\n')
+			print line
+			sys.exit(1)
 
-	if antsDict['transcript_id'] != curtTransId and curtTransId !='': ##### 1st
-		trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
-		finalOutput(trans.outputList)
+		if antsDict['transcript_id'] != curtTransId and curtTransId !='': ##### 1st
+			trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
+			finalOutput(trans.outputList)
 
-	if antsDict['transcript_id'] != curtTransId: ##### 2nd
-		curtTransId = antsDict['transcript_id']
-		curGeneId = antsDict['gene_id']
-		curStrand = li[6]
-		exons=[]
-		cdss=[]
-	
-	if li[2] == 'exon':
-		exons.append(li[:8])
-	if li[2] == 'CDS':
-		cdss.append(li[:8])
+		if antsDict['transcript_id'] != curtTransId: ##### 2nd
+			curtTransId = antsDict['transcript_id']
+			curGeneId = antsDict['gene_id']
+			curStrand = li[6]
+			exons=[]
+			cdss=[]
+		
+		if li[2] == 'exon':
+			exons.append(li[:8])
+		if li[2] == 'CDS':
+			cdss.append(li[:8])
 
-# the last output
-trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
-finalOutput(trans.outputList)
+	# the last output
+	trans = Transcript(curGeneId, curtTransId, curStrand, exons, cdss)
+	finalOutput(trans.outputList)
 
 ##test beign
 # print str(exons)
