@@ -17,12 +17,13 @@ class Transcript:
 		self.strand = curStrand
 		self.generalInfo = self.exons[0][0:2] + self.exons[0][5:8]
 		self.exons, self.exonCods = self.getCoordiates(self.exons)
+		self.conbinedExonCods = self.getConbineExons()
 		self.outputList = []
 
 		self.outputList.extend(self.__getExonOut())
 		# self.exons[0].append('test')
 		# exon大于1才会有intron
-		if len(self.exons) > 1:
+		if len(self.conbinedExonCods) > 1:
 			self.intronCods = self.getIntronCords()
 			self.outputList.extend(self.getIntronOut())
 
@@ -48,9 +49,33 @@ class Transcript:
 		originList = copy.deepcopy([originList[i] for i in idx])
 		return originList, coordinates
 
+	def conbine2Exons(self, x, y):
+			coordinates = np.append(x, y)
+			coordinates.sort()
+			return [coordinates[0], coordinates[-1]]
+
+
+	def getConbineExons(self):
+		# pdb.set_trace()
+		conbinedExonCods = []
+		toBeremoved = []
+		for i in range(len(self.exonCods)):
+			if not i in toBeremoved:
+				toBeremoved.append(i)
+				curConbineExon = self.exonCods[i]
+				for j in range(i, len(self.exonCods)):
+					if not j in toBeremoved:
+						if not (curConbineExon[1] < self.exonCods[j][0] or self.exonCods[j][1] < curConbineExon[0]):
+							toBeremoved.append(j)
+							curConbineExon = self.conbine2Exons(curConbineExon, self.exonCods[j])
+				conbinedExonCods.append(curConbineExon)
+		conbinedExonCods = np.array(conbinedExonCods)
+		return conbinedExonCods
+
 	def getIntronCords(self):
 		'''input: exonCods'''
-		intronCods = np.copy(self.exonCods).reshape(1,-1)[:, 1:-1].reshape(-1,2)
+		
+		intronCods = np.copy(self.conbinedExonCods).reshape(1,-1)[:, 1:-1].reshape(-1,2)
 		intronCods[:, 0] = intronCods[:, 0] + 1
 		intronCods[:, 1] = intronCods[:, 1] - 1
 		return intronCods
@@ -178,6 +203,8 @@ def finalOutput(myList):
 		print outputLine
 
 ####################################################
+# f = open('/lustre/user/houm/projects/AnnoLnc/error.gtf')
+# for line in f.readlines():
 for line in sys.stdin.readlines():
 	# pdb.set_trace()
 	li = line.rstrip('\n').split('\t')
@@ -231,9 +258,11 @@ finalOutput(trans.outputList)
 # # print li[:8]
 # # print exons
 # print
-# # print trans.exons
+# print trans.exons
 # print
 # print trans.exonCods
+# print
+# print trans.conbinedExonCods
 # print
 # print trans.intronCods
 # print
