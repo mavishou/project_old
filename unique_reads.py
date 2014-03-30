@@ -1,5 +1,5 @@
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*
-#!/usr/bin/python
 # !!! 输入的bowtie文件一定要先按照名字sort 
 # 从bowtie文件中得到unique reads，因为在PAR-CLIP中，T>C和A->G的错配是正常的，要把它们扣除
 # 也就是说，一般情况下，strata最高的输出，如果有几个的话就不是unique reads了，这里想换回一下，如果扣掉T>C A>G后，某个reads的strata上来了，那它就是唯一的了

@@ -1,5 +1,5 @@
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*
-#!/usr/bin/python
 # 用来控制mismatch的数目
 # 输入文件是uqniue的reads
 import sys

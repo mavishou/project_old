@@ -1,5 +1,5 @@
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*
-#!/usr/bin/python
 '''
 Author: Mei Hou
 
@@ -58,7 +58,7 @@ class Transcript:
 			self.intronCods = self.getIntronCords()
 			self.outputList.extend(self.getIntronOut())
 
-# 		# 如果有cds，得到UTR
+ 		# 如果有cds，得到UTR
 		if len(self.cdss) > 0:
 			self.cdss, self.cdsCods = self.getCoordiates(self.cdss)
 			self.utr5Cods, self.utr3Cods = self.getUTR()
@@ -175,7 +175,8 @@ class Transcript:
 		Main pseudo input: self.utr5Cods, self.utr3Cods, starnd
 		Output: the output form of UTR
 
-		'''			annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID
+		'''			
+		annotation = 'gene_id ' + self.geneId + '; transcript_id ' + self.transID
 		utrOut=[]
 		for utr in self.utr5Cods:
 			utrOut.append(self.generalInfo[:2] + ["5_UTR"] + [str(s) for s in utr] + self.generalInfo[2:] + [annotation])
@@ -271,7 +272,7 @@ if __name__ == '__main__':
 	curStrand = ''
 	exons = []
 	cdss = []
-	
+
 	# f = open('/lustre/user/houm/projects/AnnoLnc/error.gtf')
 	# for line in f.readlines():
 	for line in sys.stdin.readlines():
