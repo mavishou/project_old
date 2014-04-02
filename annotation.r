@@ -10,3 +10,5 @@ anno[anno[, 3] == '-', 3] <- 'lincRNA'
 
 write.table(anno[, c(1,2,3,6,7)], file = 'V4_final_transcript_annotation_0401.txt', 
             sep = '\t', quote = F, row.names = F)
+
+final <- anno[, c(1,2,3,6,7)]

@@ -12,7 +12,7 @@ import sys
 # import cPickle
 # import copy
 import getopt
-from collections import defaultdict
+# from collections import defaultdict
 import modify_gtf as gtf
 
 # deal with parameters
