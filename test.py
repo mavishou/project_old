@@ -1,23 +1,14 @@
-#!/usr/bin/python
+#!/usr/bin/env python2.7
+# -*- coding: utf-8 -*
+
 import sys
-for line in sys.stdin.readlines():
-	line = line.rstrip('\n')
-	li = line.split('\t')
-	#print len(li)
-	print li[7],
-	if li[7]=='':
-		print 'yes'
+from collections import defaultdict
+t = 0
 
-#I will have a test
-# This is a test
-
-I will have it
-How do you think about it 
- I'm just editing it.
- editing
- It works very well
- heihie 
- It works well!
- I love it
- Try it again!
- It works very well
+ddCount = defaultdict(int)
+if t == 1:
+	for line in sys.stdin.readlines():
+		print line
+else:
+	for line in sys.stdin.readlines():
+		print line + '!'
