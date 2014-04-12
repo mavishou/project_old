@@ -10,6 +10,30 @@ import numpy as np
 # import pdb
 # import cPickle
 # import copy
+import getopt
+from collections import defaultdict
+
+# parameters
+transCountFile = ''
+opts, args = getopt.getopt(sys.argv[1:], 'c:h')
+for op, value in opts:
+	if op == '-c':
+		transCountFile = value
+	elif op == '-h':
+		print '''
+
+		'''
+		sys.exit(0)
+
+if transCountFile == '':
+	sys.stderr.write('-c must be specified!\n')
+	sys.exit(1)
+
+ddTransCount = defaultdict(int)
+transCountFile = open(transCountFile)
+for line in transCountFile.readlines():
+	li = line.rstrip('\n').split('\t')
+	ddTransCount[li[0]] = int(li[1])
 
 def summaryLast():
 	global curTransId
@@ -49,10 +73,12 @@ def summaryLast():
 	llCurClusterInfo = llCurClusterInfo[idx]
 	lCurClusterLen = lCurClusterLen[idx]
 	# lCurOverlaptLen = lCurOverlaptLen[idx]
-	
+
 	oClusterId = '; '.join(lCurClusterId)
 	oFeature = '; '.join(lCurFeature)
-	oSumClusterInfo = [str(d) for d in np.sum(llCurClusterInfo, 0)]
+	lCurClusterInfo = [d for d in np.sum(llCurClusterInfo, 0)]
+	conversionFrac = str(round(float(lCurClusterInfo[2])/(lCurClusterInfo[3] + lCurClusterInfo[2]), 2))
+	oSumClusterInfo = [str(d) for d in lCurClusterInfo]
 	tna = np.transpose(llCurClusterInfo)
 	oClusterInfo = []
 	for a in tna:
@@ -65,7 +91,7 @@ def summaryLast():
 	clusterNum = str(len(lCurClusterId))
 	print '\t'.join([curTransId, curGeneId, curGeneName, curCh, curStrand, curBiotype, clusterNum, oClusterId] + 
 		oSumClusterInfo + 
-		[oFeature, oClusterLen, oOverlapLen] + 
+		[conversionFrac, str(ddTransCount[curTransId]), oFeature, oClusterLen, oOverlapLen] + 
 		oClusterInfo)
 
 def formatClusterInfo(naClusterInfo):
@@ -83,7 +109,7 @@ def tapply(vector, factor, idx):
 	return(result)
 
 print '\t'.join(['TranscriptID', 'GeneID', 'GeneName', 'Chromosome', 'Strand', 'BioType', '#Clusters', 'ClusterIDs', 
-	'TotalReadCout', 'TotalConversionLocationCount', 'TotalConversionEventCount', 'TotalNonConversionEventCount', 'ClusterFeatures', 
+	'SumReadCout', 'SumConversionLocationCount', 'SumConversionEventCount', 'SumNonConversionEventCount', 'conversionProportion', 'transReadsCount', 'ClusterFeatures', 
 	'CLusterLengths', 'OverlapLengths', 'ReadCout', 'ConversionLocationCount', 'ConversionEventCount', 'ConversionEventCount'])
 
 curTransId = ''
@@ -104,30 +130,31 @@ for li in sys.stdin.readlines():
 	li = li.rstrip('\n').split('\t')
 	clusterId, ch, strand, clusterLen, overlapLen, transId, biotype, feature, geneName, geneId = li[:10]
 	lClusterInfo = [int(s) for s in li[10:]]
+	# if a cluster is not totally included in a transcript, discard this line
+	if clusterLen == overlapLen:
+		# summary the last transcript
+		if curTransId != '' and transId != curTransId:
+			summaryLast()
 
-	# summary the last transcript
-	if curTransId != '' and transId != curTransId:
-		summaryLast()
-	
-	# begin a new transcript
-	if transId != curTransId:
-		curTransId = transId
-		curBiotype = biotype
-		curGeneName = geneName
-		curGeneId = geneId
-		curCh = ch
-		curStrand = strand
-		lCurClusterLen = []
-		lCurOverlaptLen = []
-		lCurClusterId = []
-		lCurFeature = []
-		llCurClusterInfo = []
+		# begin a new transcript
+		if transId != curTransId:
+			curTransId = transId
+			curBiotype = biotype
+			curGeneName = geneName
+			curGeneId = geneId
+			curCh = ch
+			curStrand = strand
+			lCurClusterLen = []
+			lCurOverlaptLen = []
+			lCurClusterId = []
+			lCurFeature = []
+			llCurClusterInfo = []
 
-	# every lines should do this
-	lCurClusterId.append(clusterId)
-	lCurFeature.append(feature)
-	llCurClusterInfo.append(lClusterInfo)
-	lCurClusterLen.append(clusterLen)
-	lCurOverlaptLen.append(overlapLen)
+		# every lines should do this
+		lCurClusterId.append(clusterId)
+		lCurFeature.append(feature)
+		llCurClusterInfo.append(lClusterInfo)
+		lCurClusterLen.append(clusterLen)
+		lCurOverlaptLen.append(overlapLen)
 
 summaryLast()
