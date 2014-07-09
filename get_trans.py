@@ -23,7 +23,7 @@ def summaryLast():
 	firstCoord = min(lCoords)
 	lastCoord = max(lCoords)
 
-	lOut = [curCh, curSrc, 'transcript', str(firstCoord), str(lastCoord), '.', '-', '.', 'gene_id ' + curGeneId + '; transcript_id ' + curTransId]
+	lOut = [curCh, curSrc, 'transcript', str(firstCoord), str(lastCoord), '.', curStrand, '.', 'gene_id ' + curGeneId + '; transcript_id ' + curTransId]
 	print '\t'.join(lOut)
 
 

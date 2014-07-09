@@ -1,0 +1,100 @@
+#!/bin/bash
+
+outputDir=./
+gtfFile=/lustre/user/houm/projects/AnnoLnc/V4_transcripts_houm.gtf
+transAnnoFile=/lustre/user/houm/projects/AnnoLnc/V4_final_transcript_annotation_0401.txt
+
+
+function help_message {
+	echo "This script is used to annotate bed files."
+	echo -e "\tUsage:\tannotation -i bed_file -o output_prefix [-d output_dir -g gtf_file -t transcript_annotation_file]"
+}
+
+
+while getopts "i:o:d:g:t:h" arg
+do
+  case $arg in
+  	i) bedFile=$OPTARG;;
+	o) outputPrefix=$OPTARG;;
+	d) outputDir=$OPTARG;;
+	g) gtfFile=$OPTARG;;
+	t) transAnnoFile=$OPTARG;;
+    h) help_message
+       exit 0;;
+    ?) echo -e "Unknown argument" >&2
+       help_message >&2 
+       exit 1;;
+  esac
+done
+
+if [ -z $bedFile ];then
+  echo -e "-i must be specified!" >&2
+  help_message >&2
+  exit 1
+fi
+
+if [ -z $outputPrefix ];then
+  echo -e "-o must be specified!" >&2
+  help_message >&2
+  exit 1
+fi
+
+outputPath=`readlink -f $outputDir`
+intersectFilePath=${outputPath}/intersect_${outputPrefix}.txt
+outputFilePath=${outputPath}/${outputPrefix}_annotation.txt
+
+function run_annotation {
+
+R --slave --vanilla <<EOF
+r_intersectFile <- "$intersectFilePath"
+r_transAnnoFile <- "$transAnnoFile"
+r_outputFile <- "$outputFilePath"
+
+intersectFile <- read.table(r_intersectFile, sep='\t', stringsAsFactors=F)
+cluster2trans <- cbind(intersectFile[, 4], 
+                       do.call('rbind', strsplit(intersectFile[, 15], ' '))[, 4])
+
+# make the transcript annotation
+transAnno <- read.table(r_transAnnoFile, sep='\t', stringsAsFactors=F, header=T)
+if(any(! cluster2trans[, 2] %in% transAnno[, 1])){
+  stop('transcript not existed!')
+}
+transGeneId <- transAnno[, 2]
+transType <- transAnno[, 3]
+transGeneName <- transAnno[, 4]
+names(transGeneId) <- names(transType) <- names(transGeneName) <- transAnno[, 1]
+
+rm(intersectFile, transAnno)
+
+outClusterAnno <- tapply(cluster2trans[, 1], as.factor(cluster2trans[, 2]), length)
+
+outTrans <- names(outClusterAnno)
+outAnno <- cbind(transGeneName[outTrans], outTrans, transGeneId[outTrans], outClusterAnno)
+# outAnno <- cbind(transGeneName[outTrans], outTrans, transGeneId[], outClusterAnno)
+colnames(outAnno) <- c('GeneName', 'TranscriptID', 'GeneID', 'ClusterNum')
+
+write.table(outAnno, file=r_outputFile, sep='\t', quote=F, row.names=F)
+
+# stat
+numCluster <- length(unique(cluster2trans[, 1]))
+numTrans <- length(outTrans)
+numGenes <- length(unique(outAnno[, 'GeneID']))
+
+cat('# clusters that are annotated: ')
+cat (numCluster)
+cat('\n')
+cat('# Transcripts: ')
+cat (numTrans)
+cat('\n')
+cat('# Genes: ')
+cat (numGenes)
+cat('\n')
+EOF
+}
+
+echo -n "Running intersectBed......"
+intersectBed -a $bedFile -b $gtfFile -f 1 -wa -wb -s > $intersectFilePath
+echo "Done!"
+echo 
+echo "$outputPrefix: "
+run_annotation
