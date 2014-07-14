@@ -135,6 +135,11 @@ plot(gcNorm[, 2], gcHtseq[, 2], pch=20, xlim=c(0, 8e5), ylim=c(0, 8e5),
 text(6e5, 6e5, 'Pearson cor: 0.61', cex=1.2)
 text(6e5, 7e5, 'Spearman cor: 0.92', cex=1.2)
 
+# 找出在cuff中为0，却在HTSeq中reads数目很多的
+abNormal <- gCuff[gcNorm[, 2] == 0 & gcHtseq[, 2] > 100000]
+rownames(gcNorm) <- rownames(gcNorm2) <- rownames(gcHtseq) <- gCuff
+gcNorm[abNormal, ]
+
 plot(gcNorm[, 5], gcHtseq[, 5], pch=20, 
      xlim=c(0, 4e5), ylim=c(0, 4e5), 
      xlab="Cuff", ylab="HTSeq", main="GSE24399_GSM601407 genes")
@@ -215,6 +220,239 @@ fCompare(gfMy, gfNorm2, 'spearman')
 # [1] 0.8718634
 # [1] 0.9215698
 
+fCompare(gfMy, gfNorm)
+# [1] 0.02718064
+# [1] 0.1237496
+# [1] 0.01356685
+# [1] 0.7207269
+
+fCompare(gfMy, gfNorm, 'spearman')
+# [1] 0.8766291
+# [1] 0.8982885
+# [1] 0.8718319
+# [1] 0.9215441
+
+plot(gfNorm2[, 2], gfMy[, 2], pch=20)
 plot(gfNorm2[, 2], gfMy[, 2], pch=20, xlim=c(0, 1000), ylim=c(0, 1000))
+
+# ------------compare fc and HTSeq and Norm2 ----------------------
+samples <- c('ERR030882', 'ERR030885', 'GSE16256_GSM915328', 'GSE24399_GSM601407')
+fCompare(gcFc, gcHtseq)
+# [1] 0.9930448
+# [1] 0.9989145
+# [1] 0.996702
+# [1] 1
+png(file="1.png", height = 500, width = 500, pointsize = 15)
+par(mfrow=c(2,2))
+for(i in 2:5){
+  plot(gcFc[, i], gcHtseq[, i], pch=20, xlab='FeatureCounts', ylab='HTSeq', 
+       main=paste(samples[i-1], 'fragments count', sep=' '))
+}
+
+for(i in 2:5){
+  plot(gcNorm2[, i], gcFc[, i], pch=20, ylab='FeatureCounts', xlab='CuffNorm (not normalized for library size)', 
+       main=paste(samples[i-1], 'fragments count', sep=' '))
+}
+
+i=2
+plot(gcNorm2[, i], gcFc[, i], pch=20, ylab='FeatureCounts', xlab='CuffNorm (not normalized for library size)', 
+     xlim=c(0, 6e5), ylim=c(0, 6e5), main=paste(samples[i-1], 'fragments count', sep=' '))
+i=3
+plot(gcNorm2[, i], gcFc[, i], pch=20, ylab='FeatureCounts', xlab='CuffNorm (not normalized for library size)', 
+     xlim=c(0, 6e5), ylim=c(0, 6e5), main=paste(samples[i-1], 'fragments count', sep=' '))
+i=4
+plot(gcNorm2[, i], gcFc[, i], pch=20, ylab='FeatureCounts', xlab='CuffNorm (not normalized for library size)', 
+     xlim=c(0, 150000), ylim=c(0, 150000), main=paste(samples[i-1], 'fragments count', sep=' '))
+i=5
+plot(gcNorm2[, i], gcFc[, i], pch=20, ylab='FeatureCounts', xlab='CuffNorm (not normalized for library size)', 
+     xlim=c(0, 1e5), ylim=c(0, 1e5), main=paste(samples[i-1], 'fragments count', sep=' '))
+
+for(i in 2:5){
+  plot(gcNorm[, i], gcFc[, i], pch=20, ylab='FeatureCounts', xlab='CuffNorm', 
+       main=paste(samples[i-1], 'fragments count', sep=' '))
+}
+
+i=2
+plot(gcNorm[, i], gcFc[, i], pch=20, ylab='FeatureCounts', xlab='CuffNorm', 
+     xlim=c(0, 6e5), ylim=c(0, 6e5), main=paste(samples[i-1], 'fragments count', sep=' '))
+i=3
+plot(gcNorm[, i], gcFc[, i], pch=20, ylab='FeatureCounts', xlab='CuffNorm', 
+     xlim=c(0, 6e5), ylim=c(0, 6e5), main=paste(samples[i-1], 'fragments count', sep=' '))
+i=4
+plot(gcNorm[, i], gcFc[, i], pch=20, ylab='FeatureCounts', xlab='CuffNorm', 
+     xlim=c(0, 150000), ylim=c(0, 150000), main=paste(samples[i-1], 'fragments count', sep=' '))
+i=5
+plot(gcNorm[, i], gcFc[, i], pch=20, ylab='FeatureCounts', xlab='CuffNorm', 
+     xlim=c(0, 1e5), ylim=c(0, 1e5), main=paste(samples[i-1], 'fragments count', sep=' '))
+
+# ------------------compare FPKM and counts---------------------
+i=2
+plot(gcNorm2[, i], gfNorm2[, i], pch=20, ylim=c(0, 1000), xlim=c(0, 1e5), 
+     xlab='Fragments count', ylab='FPKM', main=paste(samples[i-1], 'Cuffnorm', sep=' '))
+i=3
+plot(gcNorm2[, i], gfNorm2[, i], pch=20, xlim = c(0, 1e5), ylim = c(0, 5000),
+     xlab='Fragments count', ylab='FPKM', main=paste(samples[i-1], 'Cuffnorm', sep=' '))
+
+i=4
+plot(gcNorm2[, i], gfNorm2[, i], pch=20, ylim = c(0, 1e4), xlim=c(0, 2e5),
+     xlab='Fragments count', ylab='FPKM', main=paste(samples[i-1], 'Cuffnorm', sep=' '))
+
+i=5
+plot(gcNorm2[, i], gfNorm2[, i], pch=20, 
+     xlab='Fragments count', ylab='FPKM', main=paste(samples[i-1], 'Cuffnorm', sep=' '))
+
+# -------------compare my FPKM and cuff FPKM--------------
+
+i=2
+plot(gfNorm2[, i], gfMy[, i], pch=20, xlab='CuffNorm (not normalized for library size)', ylab='HM', 
+     xlim=c(0, 1500), ylim=c(0, 1500),
+     main=paste(samples[i-1], 'FPKM', sep=' '))
+
+i=3
+plot(gfNorm2[, i], gfMy[, i], pch=20, xlab='CuffNorm (not normalized for library size)', ylab='HM', 
+     xlim=c(0, 2500), ylim=c(0, 2500),
+     main=paste(samples[i-1], 'FPKM', sep=' '))
+
+i=4
+plot(gfNorm2[, i], gfMy[, i], pch=20, xlab='CuffNorm (not normalized for library size)', ylab='HM', 
+     xlim=c(0, 2500), ylim=c(0, 2500),
+     main=paste(samples[i-1], 'FPKM', sep=' '))
+
+i=5
+plot(gfNorm2[, i], gfMy[, i], pch=20, xlab='CuffNorm (not normalized for library size)', ylab='HM', 
+     xlim=c(0, 3000), ylim=c(0, 3000),
+     main=paste(samples[i-1], 'FPKM', sep=' '))
+
+
+for(i in 2:5){
+  plot(gfNorm2[, i], gfMy[, i], pch=20, xlab='CuffNorm (not normalized for library size)', ylab='HM', 
+       xlim=c(0, 500), ylim=c(0, 500),
+       main=paste(samples[i-1], 'FPKM', sep=' '))
+}
+
+
+# -----------------------cuffdiff output-----------------------------
+gcCuffRaw <- read.table('norm3_raw_counts.txt', stringsAsFactors = F)
+all(gcCuffRaw[, 1] == gcNorm2[, 1])
+fCompare(gcFc, gcCuffRaw)
+# [1] 0.6002613
+# [1] 0.3629053
+# [1] 0.3543792
+# [1] 0.9885178
+
+fCompare(gcFc, gcCuffRaw, 'spearman')
+# [1] 0.9252406
+# [1] 0.9320169
+# [1] 0.9172879
+# [1] 0.9461658
+
+
+par(mfrow=c(2,2))
+for(i in 2:5){
+  plot(gcFc[, i], gcCuffRaw[, i], pch=20, xlab='FeatureCounts', ylab='Cufflinks raw', 
+       main=paste(samples[i-1], 'fragments count', sep=' '))
+}
+i=2
+plot(gcFc[, i], gcCuffRaw[, i], pch=20, xlab='FeatureCounts', ylab='Cufflinks raw', 
+     main=paste(samples[i-1], 'fragments count', sep=' '),
+     xlim=c(0, 6e5), ylim=c(0, 6e5))
+
+i=3
+plot(gcFc[, i], gcCuffRaw[, i], pch=20, xlab='FeatureCounts', ylab='Cufflinks raw', 
+     main=paste(samples[i-1], 'fragments count', sep=' '),
+     xlim=c(0, 6e5), ylim=c(0, 6e5))
+
+i=4
+plot(gcFc[, i], gcCuffRaw[, i], pch=20, xlab='FeatureCounts', ylab='Cufflinks raw', 
+     main=paste(samples[i-1], 'fragments count', sep=' '),
+     xlim=c(0, 6e5), ylim=c(0, 6e5))
+
+i=5
+plot(gcFc[, i], gcCuffRaw[, i], pch=20, xlab='FeatureCounts', ylab='Cufflinks raw', 
+     main=paste(samples[i-1], 'fragments count', sep=' '), 
+     xlim=c(0, 8e4), ylim=c(0, 8e4))
+
+
+# -----------not correct for effective length-------------------
+gcEffective <- read.table('genes.count_table', header = T, stringsAsFactors = F)
+gfEffective <- read.table('genes.fpkm_table', header = T, stringsAsFactors = F)
+
+par(mfrow=c(2,2))
+for(i in 2:5){
+  plot(gfEffective[, i], gfMy[, i], pch=20, xlab='Cuffquant (not correlated for effective length)', ylab='HM',
+       main=paste(samples[i-1], 'FPKM', sep=' '))
+}
+
+i=2
+plot(gfEffective[, i], gfMy[, i], pch=20, xlab='Cuffquant (not correlated for effective length)', ylab='HM', 
+     xlim=c(0, 1500), ylim=c(0, 1500),
+     main=paste(samples[i-1], 'FPKM', sep=' '))
+
+i=3
+plot(gfEffective[, i], gfMy[, i], pch=20, xlab='Cuffquant (not correlated for effective length)', ylab='HM', 
+     xlim=c(0, 2500), ylim=c(0, 2500),
+     main=paste(samples[i-1], 'FPKM', sep=' '))
+
+i=4
+plot(gfEffective[, i], gfMy[, i], pch=20, xlab='Cuffquant (not correlated for effective length)', ylab='HM', 
+     xlim=c(0, 2500), ylim=c(0, 2500),
+     main=paste(samples[i-1], 'FPKM', sep=' '))
+
+i=5
+plot(gfEffective[, i], gfMy[, i], pch=20, xlab='Cuffquant (not correlated for effective length)', ylab='HM', 
+     xlim=c(0, 3000), ylim=c(0, 3000),
+     main=paste(samples[i-1], 'FPKM', sep=' '))
+
+for(i in 2:5){
+  plot(gfEffective[, i], gfMy[, i], pch=20, xlab='Cuffquant (not correlated for effective length)', ylab='HM', 
+       xlim=c(0, 500), ylim=c(0, 500),
+       main=paste(samples[i-1], 'FPKM', sep=' '))
+}
+
+
+# ------------edgeR--------------------------
+dge <- DGEList(counts=gcFc[, 2:5], lib.size=totalMass)
+# dge$genes$length <- geneLength
+gfEdgeR <- rpkm(dge, gene.length=geneLength)
+
+
+
+# ---------------RPKM-----------------------
+gcrFc <- read.table('all_reads_counts.txt', stringsAsFactors = F)
+
+rownames(gcrFc) <- gFc
+gcrFc <- gcrFc[gCuff, ]
+# check order
+all(gcrFc[, 1] == gcNorm[, 1])
+
+fCompare(gcrFc, gcFc)
+# [1] 0.9980141
+# [1] 0.9992908
+# [1] 0.9977601
+# [1] 1
+
+# calculate FPKM using reads count
+# total mass
+totalMass2 <- c(134740145, 143922366, 363856013, 17407482)
+totalMass3 <- c(93892894, 101234499, 232204637, 10601172)
+
+grMy <- gfNorm
+grMy[, 2:5] <- 0
+for(i in 2:5){
+  grMy[, i] <- gcrFc[, i] * 10^9 / (totalMass3[i-1] * geneLength)
+}
+
+dge <- DGEList(counts=gcrFc[, 2:5], lib.size=totalMass3)
+grEdgeR <- rpkm(dge, gene.length=geneLength)
+
+
+# ---------------effective length and no effective length-----------------
+for(i in 2:5){
+  plot(gfEffective[, i], gfNorm2[, i], pch=20, xlab='Cuffquant (not correlated for effective length)', ylab='Cuffquant', 
+       xlim=c(0, 3000), ylim=c(0, 3000),
+       main=paste(samples[i-1], 'FPKM', sep=' '))
+}
+
+
 
 
