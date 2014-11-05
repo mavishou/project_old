@@ -48,4 +48,26 @@ sort(table(lncrTypes), decreasing=T)
 
 length(unique(lncr[, 1]))
 
+# -----------------sequence------------------
+# I want to get the lncRNA sequence from the disease lncRNA
 
+# from the disease dataset
+dLnc <- scan('/Users/Mavis/BaiduYun/AnnoLnc/RPI prediction/disease_lncRNAs.txt', what='character')
+# lncRNA name in upper case
+dUlnc <- toupper(dLnc)
+names(dLnc) <- dUlnc
+
+# the raid dataset
+rLnc <- unique(lncp[, 1])
+rUlnc <- toupper(rLnc)
+sum(rUlnc %in% dUlnc)
+r2d <- dUlnc[dUlnc %in% rUlnc]
+
+lncp <- unique(pr[pr[, 5] == 'lncRNA', c(1,2,3,4,6,7,8,12)])
+lncp <- cbind(lncp, dLnc[toupper(lncp[, 3])])
+lncp[, 9] <- as.vector(lncp[, 9])
+lncp[is.na(lncp[, 9]), 9] <- '-'
+lnc <- unique(lncp[, c(3, 4, 9)])
+
+write.table(lncp, file='lncRNA_protein_seq.txt', row.names=F, quote = F, sep='\t')
+write.table(lnc, file='lncRNA_seq.txt', row.names=F, quote = F, sep='\t')
